@@ -18,14 +18,18 @@ def text_conditioning(input_text):
     input_text = re.sub(r"\'d", ' would ', input_text)
     input_text = re.sub(r"\'ll", ' will ', input_text)
     input_text = remove_punctuation(input_text)
-    input_text = re.sub('[^a-zA-Z ?!]+', '', input_text)
+    input_text = re.sub('[^a-zA-Z]+', ' ', input_text)
     input_text = remove_stop_words(input_text)
 
     return input_text
 
 
 def remove_punctuation(input_text):
-    return input_text.translate(str.maketrans('', '', string.punctuation))
+    return re.sub(r'[^\w\s]',' ',input_text)
+
+
+def whitespaces_conditioning(input_text):
+    return ' '.join(input_text.split())
 
 
 def remove_stop_words(tokenized_input_text):
@@ -80,9 +84,11 @@ if __name__ == "__main__":
 
     books_df = read_goodreads_10k()
 
-    frequent_genres = get_n_most_frequent_genres(books_df, 'primary')
+    frequent_genres = get_n_most_frequent_genres(books_df, 'primary', 24)
 
     print(frequent_genres)
+
+    frequent_genres = ['Romance', 'Adventure', 'Audiobook', 'Young Adult', 'Space', 'Historical', 'Adult', 'Speculative Fiction', 'War', 'Apocalyptic']
 
     books_df_filtered = filter_out_genres(books_df, 'primary', frequent_genres)
 
@@ -91,8 +97,8 @@ if __name__ == "__main__":
     print(books_df_filtered)
 
     # TEST text conditioning
-    # for index, book in books_df.iterrows():
-    #     print('========================')
-    #     print(book['book_description'])
-    #     print('------------------------')
-    #     print(text_conditioning(book['book_description']))
+    for index, book in books_df.iterrows():
+        print('========================')
+        print(book['book_description'])
+        print('------------------------')
+        print(text_conditioning(book['book_description']))

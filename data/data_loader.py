@@ -27,10 +27,6 @@ def get_description_length(description_text):
     return len(description_text.split())
 
 
-def whitespaces_conditioning(input_text):
-    return ' '.join(input_text.split())
-
-
 def read_goodreads_10k():
     data_directory = get_data_path()
 
@@ -46,6 +42,9 @@ def read_goodreads_10k():
 
     books_df.columns = map(str.lower, books_df.columns)
 
+    # drop duplicates
+    books_df.drop_duplicates(subset='url', keep='first', inplace=False)
+
     # keep english only books
     books_df = books_df[books_df['edition_language'] == 'English']
 
@@ -55,10 +54,9 @@ def read_goodreads_10k():
     # transform genres json column to list
     books_df['genres_list'] = books_df.apply(lambda row: genre_string_to_list(row['genres']), axis=1)
     books_df['primary_genres_list'] = books_df.apply(lambda row: generate_primary_genres(row['genres_list']), axis=1)
-    books_df['book_description'] = books_df.apply(lambda book: whitespaces_conditioning(book['book_description']), axis=1)
     books_df['description_length'] = books_df.apply(lambda book: get_description_length(book['book_description']), axis=1)
     
-    books_df = books_df[books_df['description_length'] > 20]
+    books_df = books_df[books_df['description_length'] > 10]
 
     books_df.drop(columns=['genres', 'url', 'edition_language', 'original_book_title'], inplace=True)
 
