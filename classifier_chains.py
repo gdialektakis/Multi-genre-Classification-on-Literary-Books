@@ -38,10 +38,10 @@ def vectorize(train ,test, genres_to_predict):
 
 
 
-def classifier_chains(algorithm):
+def classifier_chains(classifier):
     train, test, genres_to_predict = load_data()
     X_train, X_test, y_train, y_test = vectorize(train, test, genres_to_predict)
-    chain = ClassifierChain(algorithm, order='random', random_state=0)
+    chain = ClassifierChain(classifier, order='random', random_state=0)
     chain.fit(X_train, y_train)
     # chain.predict_proba(X_test)
     y_pred = chain.predict(X_test)
@@ -57,10 +57,12 @@ def evaluate(y_test, y_pred):
 
 
 if __name__ == "__main__":
-    algorithm = LogisticRegression(solver='lbfgs', random_state=0, max_iter=300)
-    y_test, y_pred = classifier_chains(algorithm)
+    classifier = LogisticRegression(solver='lbfgs', random_state=0, max_iter=300)
+    y_test, y_pred = classifier_chains(classifier)
+    print('\n Classifier : {:}'.format(classifier))
     evaluate(y_test, y_pred)
     # Naive Bayes
-    algorithm = MultinomialNB()
-    y_test, y_pred = classifier_chains(algorithm)
+    classifier = MultinomialNB()
+    y_test, y_pred = classifier_chains(classifier)
+    print('\n Classifier : {:}'.format(classifier))
     evaluate(y_test, y_pred)
