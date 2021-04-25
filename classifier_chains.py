@@ -1,49 +1,66 @@
-import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
 from sklearn.metrics import roc_auc_score
 from sklearn.multioutput import ClassifierChain
+from sklearn.naive_bayes import MultinomialNB
 
 from data.data_loader import read_goodreads_10k
 from data.data_processing import text_conditioning, get_n_most_frequent_genres, filter_out_genres, genres_to_onehot
 
 
+def load_data():
+    # LOAD DATA
+    books_df = read_goodreads_10k()
 
-# LOAD DATA
-books_df = read_goodreads_10k()
+    books_df['book_description_processed'] = books_df.apply(lambda book: text_conditioning(book['book_description']),
+                                                            axis=1)
+    classification_on = 'primary'
 
-books_df['book_description_processed'] = books_df.apply(lambda book: text_conditioning(book['book_description']), axis=1)
+    genres_to_predict = get_n_most_frequent_genres(books_df, classification_on, n=10)
 
-classification_on = 'primary'
+    books_df = filter_out_genres(books_df, classification_on, genres_to_predict)
+    books_df = genres_to_onehot(books_df, classification_on, genres_to_predict)
+    print(books_df)
+    # SPLIT AND VECTORIZE
+    train, test = train_test_split(books_df, test_size=0.25)
+    return train, test, genres_to_predict
 
-genres_to_predict = get_n_most_frequent_genres(books_df, classification_on, n=10)
 
-books_df = filter_out_genres(books_df, classification_on, genres_to_predict)
-books_df = genres_to_onehot(books_df, classification_on, genres_to_predict)
+def vectorize(train ,test, genres_to_predict):
+    vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
+    X_train = vectorizer.fit_transform(train['book_description_processed'])
+    X_test = vectorizer.transform(test['book_description_processed'])
+    y_train = train[genres_to_predict]
+    y_test = test[genres_to_predict]
+    return X_train, X_test, y_train, y_test
 
-print(books_df)
 
-# SPLIT AND VECTORIZE
-train, test = train_test_split(books_df, test_size=0.25)
 
-vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2))
+def classifier_chains(algorithm):
+    train, test, genres_to_predict = load_data()
+    X_train, X_test, y_train, y_test = vectorize(train, test, genres_to_predict)
+    chain = ClassifierChain(algorithm, order='random', random_state=0)
+    chain.fit(X_train, y_train)
+    # chain.predict_proba(X_test)
+    y_pred = chain.predict(X_test)
+    return y_test, y_pred
 
-X_train = vectorizer.fit_transform(train['book_description_processed'])
-X_test = vectorizer.transform(test['book_description_processed'])
-y_train = train[genres_to_predict]
-y_test = test[genres_to_predict]
 
-lr = LogisticRegression(solver='lbfgs', random_state=0, max_iter=300)
-chain = ClassifierChain(lr, order='random', random_state=0)
-chain.fit(X_train, y_train)
-chain.predict_proba(X_test)
+def evaluate(y_test, y_pred):
+    print('Accuracy score: {:.3f}'.format(metrics.accuracy_score(y_test, y_pred)))
+    print('Recall score: {:.3f}'.format(metrics.recall_score(y_test, y_pred, average='samples')))
+    print('Precision score: {:.3f}'.format(metrics.precision_score(y_test, y_pred, average='samples')))
+    print('F1 score: {:.3f}'.format(metrics.f1_score(y_test, y_pred, average='samples')))
+    print('Hamming loss: {:.3f}'.format(metrics.hamming_loss(y_test, y_pred)))
 
-y_pred = chain.predict(X_test)
 
-print('Accuracy score: {:.3f}'.format(metrics.accuracy_score(y_test, y_pred)))
-print('Recall score: {:.3f}'.format(metrics.recall_score(y_test, y_pred, average='samples')))
-print('Precision score: {:.3f}'.format(metrics.precision_score(y_test, y_pred, average='samples')))
-print('F1 score: {:.3f}'.format(metrics.f1_score(y_test, y_pred, average='samples')))
-print('Hamming loss: {:.3f}'.format(metrics.hamming_loss(y_test, y_pred)))
+if __name__ == "__main__":
+    algorithm = LogisticRegression(solver='lbfgs', random_state=0, max_iter=300)
+    y_test, y_pred = classifier_chains(algorithm)
+    evaluate(y_test, y_pred)
+    # Naive Bayes
+    algorithm = MultinomialNB()
+    y_test, y_pred = classifier_chains(algorithm)
+    evaluate(y_test, y_pred)
