@@ -48,6 +48,7 @@ for genre in genres_to_predict:
     print('Recall score: {:.3f}'.format(metrics.recall_score(test[genre], y_pred)))
     print('Precision score: {:.3f}'.format(metrics.precision_score(test[genre], y_pred)))
     print('F1 score: {:.3f}'.format(metrics.f1_score(test[genre], y_pred)))
+    print('Hamming loss: {:.3f}'.format(metrics.hamming_loss(test[genre], y_pred)))
 
 # MULTIOUTPUT CLASSIFIER
 model = MultiOutputClassifier(LogisticRegression())
