@@ -53,6 +53,7 @@ def evaluate(y_test, y_pred):
     print('Recall score: {:.3f}'.format(metrics.recall_score(y_test, y_pred, average='samples')))
     print('Precision score: {:.3f}'.format(metrics.precision_score(y_test, y_pred, average='samples')))
     print('F1 score: {:.3f}'.format(metrics.f1_score(y_test, y_pred, average='samples')))
+    # Hamming Loss is the most widely used evaluation metric for multi-label classification
     print('Hamming loss: {:.3f}'.format(metrics.hamming_loss(y_test, y_pred)))
 
 
