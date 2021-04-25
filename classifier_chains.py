@@ -23,7 +23,7 @@ def load_data():
     books_df = filter_out_genres(books_df, classification_on, genres_to_predict)
     books_df = genres_to_onehot(books_df, classification_on, genres_to_predict)
     print(books_df)
-    # SPLIT AND VECTORIZE
+    # SPLIT 
     train, test = train_test_split(books_df, test_size=0.25)
     return train, test, genres_to_predict
 
