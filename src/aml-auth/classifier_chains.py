@@ -7,7 +7,7 @@ from sklearn.multioutput import ClassifierChain
 from sklearn.naive_bayes import MultinomialNB
 
 from data.data_loader import read_goodreads_10k
-from data.data_processing import text_conditioning, get_n_most_frequent_genres, filter_out_genres, genres_to_onehot
+from data_processing import text_conditioning, get_n_most_frequent_genres, filter_out_genres, genres_to_onehot
 
 
 def load_data():

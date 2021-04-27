@@ -9,7 +9,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.multioutput import MultiOutputClassifier
 
 from data.data_loader import read_goodreads_10k
-from data.data_processing import text_conditioning, get_n_most_frequent_genres, filter_out_genres, genres_to_onehot
+from data_processing import text_conditioning, get_n_most_frequent_genres, filter_out_genres, genres_to_onehot
 
 
 # LOAD DATA
