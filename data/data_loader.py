@@ -23,6 +23,23 @@ def generate_primary_genres(label_list):
     return list(set([re.sub(r'\s\(.*', '', label) for label in label_list]))
 
 
+def generate_single_genre(genre_string):
+    genre_string = genre_string.replace("'", '"')
+    genre_json = json.loads(genre_string)
+
+    # loop to toss specific genres
+    # for genre, popularity in genre_json.items():
+    #     if 'Science Fiction' in genre or 'Fiction' in genre or 'Fantasy' in genre:
+    #         continue
+    #     else:
+    #         return re.sub(r'\s\(.*', '', genre) 
+
+    # one liner for max
+    major_genre = max(genre_json, key=genre_json.get)
+    
+    return re.sub(r'\s\(.*', '', major_genre) 
+
+
 def get_description_length(description_text):
     return len(description_text.split())
 
@@ -52,6 +69,7 @@ def read_goodreads_10k():
     books_df = books_df[books_df['book_description'].notnull()]
 
     # transform genres json column to list
+    books_df['major_genre'] = books_df.apply(lambda row: generate_single_genre(row['genres']), axis=1)
     books_df['genres_list'] = books_df.apply(lambda row: genre_string_to_list(row['genres']), axis=1)
     books_df['primary_genres_list'] = books_df.apply(lambda row: generate_primary_genres(row['genres_list']), axis=1)
     books_df['description_length'] = books_df.apply(lambda book: get_description_length(book['book_description']), axis=1)
@@ -72,3 +90,7 @@ if __name__ == "__main__":
     books_df = read_goodreads_10k()
     print(books_df)
     print(books_df.columns)
+
+    print(len(books_df['major_genre'].value_counts().tolist()))
+
+    print(books_df['major_genre'].value_counts())
