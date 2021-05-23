@@ -33,7 +33,7 @@ def run():
 
     books_df, genres_to_predict = get_fully_processed()
     X = books_df['book_description_processed']
-    y_initial = books_df['major_genre']
+    y_initial = books_df['major_genre'].values
 
     tfidf_initial = TfidfVectorizer(ngram_range=(1, 2), max_features=5000)
     X_initial = tfidf_initial.fit_transform(X)
@@ -44,11 +44,11 @@ def run():
     training_indices = np.random.randint(low=0, high=n_labeled_examples + 1, size=10)
 
     X_train = X_initial[training_indices, :]
-    y_train = y_initial.iloc[training_indices]
+    y_train = y_initial[training_indices]#y_initial.iloc[training_indices]
 
     # Isolate the non-training examples we'll be querying.
     X_pool = delete_rows_csr(X_initial, training_indices)
-    y_pool = y_initial.drop(training_indices)
+    y_pool = np.delete(y_initial, training_indices)#.drop(training_indices)
 
     #tfidf = TfidfVectorizer(ngram_range=(1, 2), max_features=5000)
     #X_train = tfidf.fit_transform(X_train)
@@ -81,12 +81,12 @@ def run():
         # Teach our ActiveLearner model the record it has requested.
         X, y = X_pool[query_index, :], y_pool[query_index]
         #y = y.to_numpy()
-        y = y.to_frame()
+        #y = y.to_frame()
         learner.teach(X=X, y=y)
 
         # Remove the queried instance from the unlabeled pool.
-        X_pool = delete_rows_csr(X_pool, training_indices)
-        y_pool = y_pool.drop(query_index)
+        X_pool = delete_rows_csr(X_pool, query_index)
+        y_pool = np.delete(y_pool, query_index)#y_pool.drop(query_index)
 
         # Calculate and report our model's accuracy.
         model_accuracy = learner.score(X_initial, y_initial)
