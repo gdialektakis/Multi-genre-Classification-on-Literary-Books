@@ -1,9 +1,9 @@
-import string
 import re
 import collections
-from nltk import word_tokenize, download
+from nltk import download
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
 from data.data_loader import read_goodreads_10k
@@ -84,6 +84,14 @@ def genres_to_onehot(books_df, genre_type, genres_to_predict):
     return books_df
 
 
+def major_genre_label_encoding(books_df):
+    le = LabelEncoder()
+
+    books_df['major_genre'] = le.fit_transform(books_df['major_genre'])
+
+    return books_df
+
+
 def get_fully_processed(classification_on="primary", num_of_genres=10):
     books_df = read_goodreads_10k()
 
@@ -94,6 +102,7 @@ def get_fully_processed(classification_on="primary", num_of_genres=10):
 
     books_df = filter_out_genres(books_df, classification_on, genres_to_predict)
     books_df = genres_to_onehot(books_df, classification_on, genres_to_predict)
+    books_df = major_genre_label_encoding(books_df)
 
     return books_df, genres_to_predict
 
