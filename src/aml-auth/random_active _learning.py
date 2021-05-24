@@ -1,8 +1,6 @@
 import scipy.sparse as sp
+from sklearn import metrics
 from sklearn.feature_extraction.text import TfidfVectorizer
-from functools import partial
-from modAL.batch import uncertainty_batch_sampling
-from modAL.models import ActiveLearner
 from sklearn.linear_model import LogisticRegression
 import numpy as np
 from data_processing import get_fully_processed
@@ -25,6 +23,23 @@ def delete_rows_csr(mat, indices):
     mask[indices] = False
     return mat[mask]
 
+
+def train_classifier(X_train, y_train):
+    """
+        Train a classifier on the initial labeled data.
+        """
+    logreg = LogisticRegression(solver='lbfgs', random_state=0, max_iter=300, multi_class='multinomial')
+    logreg.fit(X_train, y_train)
+    return logreg
+
+
+def evaluate_clasifier(X, y, clf):
+    y_pred = clf.predict(X)
+    accuracy_score = metrics.accuracy_score(y, y_pred)
+    #print(f"Accuracy score: {accuracy_score:.2f}")
+    return accuracy_score
+
+
 def run():
 
     books_df, genres_to_predict = get_fully_processed()
@@ -45,42 +60,31 @@ def run():
     X_pool = delete_rows_csr(X_initial, training_indices)
     y_pool = np.delete(y_initial, training_indices)
 
-    logreg = LogisticRegression(solver='lbfgs', random_state=0, max_iter=300)
-
-    # Pre-set our batch sampling to retrieve 3 samples at a time.
-    BATCH_SIZE = 3
-    preset_batch = partial(uncertainty_batch_sampling, n_instances=BATCH_SIZE)
+    # train the classifier on the initial labeled data
+    clf = train_classifier(X_train, y_train)
 
 
-    # Specify our active learning model.
-    learner = ActiveLearner(
-        estimator=logreg,
-        X_training=X_train,
-        y_training=y_train,
-        query_strategy=preset_batch
-    )
+    initial_accuracy = evaluate_clasifier(X_initial, y_initial, clf)
+    print("Initial Accuracy: ", initial_accuracy)
+    performance_history = [initial_accuracy]
 
-    # Pool-based sampling
-    N_RAW_SAMPLES = 10000
-    N_QUERIES = N_RAW_SAMPLES // BATCH_SIZE
-
-    unqueried_score = learner.score(X_initial, y_initial)
-    print("Initial Accuracy: ", unqueried_score)
-    performance_history = [unqueried_score]
+    # Random sampling
+    N_QUERIES = 10000
 
     for index in range(N_QUERIES):
-        query_index, query_instance = learner.query(X_pool)
+        query_index = np.random.choice(y_pool.shape[0], size=1, replace=False)
 
         # Teach our ActiveLearner model the record it has requested.
         X, y = X_pool[query_index, :], y_pool[query_index]
-        learner.teach(X=X, y=y)
+        # fix this to retrain the classifier and not discard the previous training
+        clf.fit(X, y)
 
         # Remove the queried instance from the unlabeled pool.
         X_pool = delete_rows_csr(X_pool, query_index)
         y_pool = np.delete(y_pool, query_index)
 
         # Calculate and report our model's accuracy.
-        model_accuracy = learner.score(X_initial, y_initial)
+        model_accuracy = evaluate_clasifier(X_initial, y_initial, clf)
         print('Accuracy after query {n}: {acc:0.4f}'.format(n=index + 1, acc=model_accuracy))
 
         # Save our model's performance for plotting.
