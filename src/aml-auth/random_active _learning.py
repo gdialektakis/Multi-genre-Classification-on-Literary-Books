@@ -1,9 +1,11 @@
 import scipy.sparse as sp
-from sklearn import metrics
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from functools import partial
+from modAL.models import ActiveLearner
+from modAL.batch import uncertainty_batch_sampling
 import numpy as np
-from data_processing import get_fully_processed
+from query_by_committee import prepare_data, create_random_pool_and_initial_sets
+from ranked_batch_mode_sampling import delete_rows_csr
 
 
 """ For more information on Ranked batch-mode sampling you can read the following paper: 
@@ -12,59 +14,26 @@ Ranked batch-mode active learning. Information Sciences, Volume 379, 2017, Pages
 https://www.sciencedirect.com/science/article/abs/pii/S0020025516313949
 """
 
-def delete_rows_csr(mat, indices):
-    """
-    Remove the rows denoted by ``indices`` form the CSR sparse matrix ``mat``.
-    """
-    if not isinstance(mat, sp.csr_matrix):
-        raise ValueError("works only for CSR format -- use .tocsr() first")
-    indices = list(indices)
-    mask = np.ones(mat.shape[0], dtype=bool)
-    mask[indices] = False
-    return mat[mask]
-
-
-def train_classifier(X_train, y_train):
-    """
-        Train a classifier on the initial labeled data.
-        """
-    logreg = LogisticRegression(solver='lbfgs', random_state=0, max_iter=300, multi_class='multinomial')
-    logreg.fit(X_train, y_train)
-    return logreg
-
-
-def evaluate_clasifier(X, y, clf):
-    y_pred = clf.predict(X)
-    accuracy_score = metrics.accuracy_score(y, y_pred)
-    #print(f"Accuracy score: {accuracy_score:.2f}")
-    return accuracy_score
-
-
 def run():
 
-    books_df, genres_to_predict = get_fully_processed()
-    X = books_df['book_description_processed']
-    y_initial = books_df['major_genre'].values
+    X_initial, y_initial = prepare_data()
+    X_train, y_train, X_pool, y_pool = create_random_pool_and_initial_sets(X_initial, y_initial, 100)
 
-    tfidf = TfidfVectorizer(ngram_range=(1, 2), max_features=5000)
-    X_initial = tfidf.fit_transform(X)
+    logreg = LogisticRegression(solver='lbfgs', random_state=0, max_iter=300)
 
-    # Isolate our examples for our labeled dataset.
-    n_labeled_examples = X_initial.shape[0]
-    training_indices = np.random.randint(low=0, high=n_labeled_examples + 1, size=10)
+    # Pre-set our batch sampling to retrieve 3 samples at a time.
+    BATCH_SIZE = 3
+    preset_batch = partial(uncertainty_batch_sampling, n_instances=BATCH_SIZE)
 
-    X_train = X_initial[training_indices, :]
-    y_train = y_initial[training_indices]
+    # Specify our active learning model.
+    learner = ActiveLearner(
+        estimator=logreg,
+        X_training=X_train,
+        y_training=y_train,
+        query_strategy=preset_batch
+    )
 
-    # Isolate the non-training examples we'll be querying.
-    X_pool = delete_rows_csr(X_initial, training_indices)
-    y_pool = np.delete(y_initial, training_indices)
-
-    # train the classifier on the initial labeled data
-    clf = train_classifier(X_train, y_train)
-
-
-    initial_accuracy = evaluate_clasifier(X_initial, y_initial, clf)
+    initial_accuracy = learner.score(X_initial, y_initial)
     print("Initial Accuracy: ", initial_accuracy)
     performance_history = [initial_accuracy]
 
@@ -74,17 +43,19 @@ def run():
     for index in range(N_QUERIES):
         query_index = np.random.choice(y_pool.shape[0], size=1, replace=False)
 
-        # Teach our ActiveLearner model the record it has requested.
+        # Teach our ActiveLearner model the random record it has been sampled.
         X, y = X_pool[query_index, :], y_pool[query_index]
+        learner.teach(X=X, y=y)
+
         # fix this to retrain the classifier and not discard the previous training
-        clf.fit(X, y)
+        #clf.fit(X, y)
 
         # Remove the queried instance from the unlabeled pool.
         X_pool = delete_rows_csr(X_pool, query_index)
         y_pool = np.delete(y_pool, query_index)
 
         # Calculate and report our model's accuracy.
-        model_accuracy = evaluate_clasifier(X_initial, y_initial, clf)
+        model_accuracy = learner.score(X_initial, y_initial)
         print('Accuracy after query {n}: {acc:0.4f}'.format(n=index + 1, acc=model_accuracy))
 
         # Save our model's performance for plotting.

@@ -8,6 +8,7 @@ import numpy as np
 from data_processing import get_fully_processed
 
 
+
 """ For more information on Ranked batch-mode sampling you can read the following paper: 
 Thiago N.C. Cardoso, Rodrigo M. Silva, Sérgio Canuto, Mirella M. Moro, Marcos A. Gonçalves. 
 Ranked batch-mode active learning. Information Sciences, Volume 379, 2017, Pages 313-337.
