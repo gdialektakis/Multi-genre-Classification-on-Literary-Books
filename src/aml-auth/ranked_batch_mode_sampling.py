@@ -14,7 +14,6 @@ Thiago N.C. Cardoso, Rodrigo M. Silva, Sérgio Canuto, Mirella M. Moro, Marcos A
 Ranked batch-mode active learning. Information Sciences, Volume 379, 2017, Pages 313-337.
 https://www.sciencedirect.com/science/article/abs/pii/S0020025516313949
 """
-
 def delete_rows_csr(mat, indices):
     """
     Remove the rows denoted by ``indices`` form the CSR sparse matrix ``mat``.
@@ -25,6 +24,7 @@ def delete_rows_csr(mat, indices):
     mask = np.ones(mat.shape[0], dtype=bool)
     mask[indices] = False
     return mat[mask]
+
 
 def run():
 

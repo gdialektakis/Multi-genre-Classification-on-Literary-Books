@@ -5,6 +5,7 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
+import numpy as np
 
 from data.data_loader import read_goodreads_10k
 
@@ -109,7 +110,6 @@ def get_fully_processed(classification_on="primary", num_of_genres=10):
 
 def get_processed_split(classification_on="primary", num_of_genres=10,
                         test_size=0.25, vectorized=True, max_features=1000, ngram_range=(1, 2)):
-
     books_df, genres_to_predict = get_fully_processed(classification_on=classification_on, num_of_genres=num_of_genres)
     train, test = train_test_split(books_df, test_size=test_size)
 
@@ -123,6 +123,18 @@ def get_processed_split(classification_on="primary", num_of_genres=10,
 
     y_train = train[genres_to_predict]
     y_test = test[genres_to_predict]
+
+    return X_train, X_test, y_train, y_test
+
+
+def get_major_genre_split(test_size=0.25, max_features=1000, ngram_range=(1, 2)):
+    books_df, genres_to_predict = get_fully_processed()
+
+    vectorizer = TfidfVectorizer(ngram_range=ngram_range, max_features=max_features)
+    X = vectorizer.fit_transform(books_df['book_description_processed'])
+    y = books_df['major_genre'].values
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
 
     return X_train, X_test, y_train, y_test
 
