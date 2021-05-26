@@ -103,9 +103,14 @@ def get_genre_label(row, genre_list):
 
 
 def label_encode_genres(books_df, genre_list):
-    books_df['genre_label'] = books_df.apply(lambda row: get_genre_label(row, genre_list), axis=1)
+    books_df['major_genre'] = books_df.apply(lambda row: get_genre_label(row, genre_list), axis=1)
 
     return books_df
+
+
+def get_selected_genres():
+    return ['Romance', 'Adventure', 'Young Adult', 'Space', 'Historical', 'Adult',
+                   'Speculative Fiction', 'War', 'Apocalyptic']
 
 
 def get_fully_processed(classification_on="primary", num_of_genres=10, genres_list=None):
@@ -121,7 +126,7 @@ def get_fully_processed(classification_on="primary", num_of_genres=10, genres_li
 
     books_df = filter_out_genres(books_df, classification_on, genres_to_predict)
     books_df = genres_to_onehot(books_df, classification_on, genres_to_predict)
-    books_df = major_genre_label_encoding(books_df)
+    books_df = label_encode_genres(books_df, genres_list)
 
     return books_df, genres_to_predict
 
@@ -167,27 +172,31 @@ def get_major_genre_split(test_size=0.25, max_features=1000, ngram_range=(1, 2))
 
 def run():
     # TEST
-    books_df = read_goodreads_10k()
+    # books_df = read_goodreads_10k()
 
-    frequent_genres = get_n_most_frequent_genres(books_df, 'primary', 24)
+    # frequent_genres = get_n_most_frequent_genres(books_df, 'primary', 24)
 
-    print(f"frequent genres: {frequent_genres}")
+    # print(f"frequent genres: {frequent_genres}")
 
-    frequent_genres = ['Romance', 'Adventure', 'Audiobook', 'Young Adult', 'Space', 'Historical', 'Adult',
-                       'Speculative Fiction', 'War', 'Apocalyptic']
+    # frequent_genres = ['Romance', 'Adventure', 'Audiobook', 'Young Adult', 'Space', 'Historical', 'Adult',
+    #                    'Speculative Fiction', 'War', 'Apocalyptic']
 
-    books_df_filtered = filter_out_genres(books_df, 'primary', frequent_genres)
+    # books_df_filtered = filter_out_genres(books_df, 'primary', frequent_genres)
 
-    books_df_filtered = genres_to_onehot(books_df_filtered, 'primary', frequent_genres)
+    # books_df_filtered = genres_to_onehot(books_df_filtered, 'primary', frequent_genres)
 
-    print(books_df_filtered)
+    # print(books_df_filtered)
 
-    # TEST text conditioning
-    for index, book in books_df.iterrows():
-        print('========================')
-        print(book['book_description'])
-        print('------------------------')
-        print(text_conditioning(book['book_description']))
+    books_df, genres_to_predict = get_fully_processed(genres_list=get_selected_genres())
+
+    print(books_df['major_genre'].value_counts())
+
+    # # TEST text conditioning
+    # for index, book in books_df.iterrows():
+    #     print('========================')
+    #     print(book['book_description'])
+    #     print('------------------------')
+    #     print(text_conditioning(book['book_description']))
 
 
 if __name__ == "__main__":

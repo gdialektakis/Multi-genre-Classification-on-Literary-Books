@@ -2,18 +2,17 @@ import numpy as np
 import time
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from modAL.models import ActiveLearner, Committee
 from modAL.disagreement import max_disagreement_sampling
 
-from data_processing import get_fully_processed
+from data_processing import get_fully_processed, get_selected_genres
 from ranked_batch_mode_sampling import delete_rows_csr
 
 
 def prepare_data():
-    books_df, genres_to_predict = get_fully_processed()
+    books_df, genres_to_predict = get_fully_processed(genres_list=get_selected_genres())
 
     vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=1000)
     X = vectorizer.fit_transform(books_df['book_description_processed'])
@@ -49,7 +48,7 @@ def run():
     learners = []
 
     for member_idx in range(n_comittee_members):
-        X_train, y_train, X_pool, y_pool = create_random_pool_and_initial_sets(X, y, 100)
+        X_train, y_train, X_pool, y_pool = create_random_pool_and_initial_sets(X, y, 1000)
 
         learners.append(ActiveLearner(estimator=model,
                         X_training=X_train, y_training=y_train))
@@ -61,7 +60,7 @@ def run():
     # print('Score over unqueried samples'.format(unqueried_score))
 
     performance_history = []
-    n_queries = 30
+    n_queries = 1000
 
     for query in range(n_queries):
 

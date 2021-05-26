@@ -5,7 +5,7 @@ from modAL.batch import uncertainty_batch_sampling
 from modAL.models import ActiveLearner
 from sklearn.linear_model import LogisticRegression
 import numpy as np
-from data_processing import get_fully_processed
+from data_processing import get_fully_processed, get_selected_genres
 
 
 
@@ -28,7 +28,7 @@ def delete_rows_csr(mat, indices):
 
 def run():
 
-    books_df, genres_to_predict = get_fully_processed()
+    books_df, genres_to_predict = get_fully_processed(genres_list=get_selected_genres())
     X = books_df['book_description_processed']
     y_initial = books_df['major_genre'].values
 
