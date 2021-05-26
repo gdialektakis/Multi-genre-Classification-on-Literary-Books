@@ -5,7 +5,6 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-import numpy as np
 
 from data.data_loader import read_goodreads_10k
 
