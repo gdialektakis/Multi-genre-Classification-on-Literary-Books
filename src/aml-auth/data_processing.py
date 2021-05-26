@@ -3,7 +3,7 @@ import re
 import collections
 from nltk import word_tokenize, download
 from nltk.corpus import stopwords
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.model_selection import train_test_split
 
 from data.data_loader import read_goodreads_10k
@@ -84,13 +84,31 @@ def genres_to_onehot(books_df, genre_type, genres_to_predict):
     return books_df
 
 
-def get_fully_processed(classification_on="primary", num_of_genres=10):
+def get_genre_label(row, genre_list):
+    for counter, genre in enumerate(genre_list):
+        if row[genre] == 1:
+            return counter
+
+    print(row)
+    print(row.values)
+
+
+def label_encode_genres(books_df, genre_list):
+    books_df['genre_label'] = books_df.apply(lambda row: get_genre_label(row, genre_list), axis=1)
+
+    return books_df
+
+
+def get_fully_processed(classification_on="primary", num_of_genres=10, genres_list=None):
     books_df = read_goodreads_10k()
 
     books_df['book_description_processed'] = books_df.apply(lambda book: text_conditioning(book['book_description']),
                                                             axis=1)
 
-    genres_to_predict = get_n_most_frequent_genres(books_df, classification_on, n=num_of_genres)
+    if not genres_list:
+        genres_to_predict = get_n_most_frequent_genres(books_df, classification_on, n=num_of_genres)
+    else:
+        genres_to_predict = genres_list
 
     books_df = filter_out_genres(books_df, classification_on, genres_to_predict)
     books_df = genres_to_onehot(books_df, classification_on, genres_to_predict)
@@ -98,14 +116,23 @@ def get_fully_processed(classification_on="primary", num_of_genres=10):
     return books_df, genres_to_predict
 
 
-def get_processed_split(classification_on="primary", num_of_genres=10,
-                        test_size=0.25, vectorized=True, max_features=1000, ngram_range=(1, 2)):
+def get_processed_split(classification_on="primary", num_of_genres=10, genres_list=None,
+                        test_size=0.25, vectorized='tf-idf', max_features=1000, ngram_range=(1, 2)):
 
-    books_df, genres_to_predict = get_fully_processed(classification_on=classification_on, num_of_genres=num_of_genres)
+    books_df, genres_to_predict = get_fully_processed(classification_on=classification_on,
+                                                      num_of_genres=num_of_genres,
+                                                      genres_list=genres_list)
+
     train, test = train_test_split(books_df, test_size=test_size)
 
     if vectorized:
-        vectorizer = TfidfVectorizer(max_features=max_features, ngram_range=ngram_range)
+        if vectorized == "tf-idf":
+            vectorizer = TfidfVectorizer(max_features=max_features, ngram_range=ngram_range)
+        elif vectorized == "bow":
+            vectorizer = CountVectorizer(stop_words='english', ngram_range=ngram_range)
+        else:
+            raise ValueError("Invalid vectorized argument, please choose on of [tf-idf, bow, None]")
+
         X_train = vectorizer.fit_transform(train['book_description_processed'])
         X_test = vectorizer.transform(test['book_description_processed'])
     else:
@@ -124,7 +151,7 @@ def run():
 
     frequent_genres = get_n_most_frequent_genres(books_df, 'primary', 24)
 
-    print(frequent_genres)
+    print(f"frequent genres: {frequent_genres}")
 
     frequent_genres = ['Romance', 'Adventure', 'Audiobook', 'Young Adult', 'Space', 'Historical', 'Adult',
                        'Speculative Fiction', 'War', 'Apocalyptic']
