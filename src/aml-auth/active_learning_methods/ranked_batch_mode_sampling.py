@@ -1,10 +1,9 @@
-import scipy.sparse as sp
+import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from functools import partial
 from modAL.batch import uncertainty_batch_sampling
 from modAL.models import ActiveLearner
 from sklearn.linear_model import LogisticRegression
-import numpy as np
 from data_processing import get_fully_processed, get_selected_genres
 
 
@@ -14,17 +13,6 @@ Thiago N.C. Cardoso, Rodrigo M. Silva, Sérgio Canuto, Mirella M. Moro, Marcos A
 Ranked batch-mode active learning. Information Sciences, Volume 379, 2017, Pages 313-337.
 https://www.sciencedirect.com/science/article/abs/pii/S0020025516313949
 """
-def delete_rows_csr(mat, indices):
-    """
-    Remove the rows denoted by ``indices`` form the CSR sparse matrix ``mat``.
-    """
-    if not isinstance(mat, sp.csr_matrix):
-        raise ValueError("works only for CSR format -- use .tocsr() first")
-    indices = list(indices)
-    mask = np.ones(mat.shape[0], dtype=bool)
-    mask[indices] = False
-    return mat[mask]
-
 
 def run():
 

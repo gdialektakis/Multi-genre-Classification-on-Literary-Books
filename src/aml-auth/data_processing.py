@@ -5,7 +5,6 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-import numpy as np
 
 from data.data_loader import read_goodreads_10k
 
@@ -113,7 +112,7 @@ def get_selected_genres():
                    'Speculative Fiction', 'War', 'Apocalyptic']
 
 
-def get_fully_processed(classification_on="primary", num_of_genres=10, genres_list=None):
+def get_fully_processed(classification_on="primary", num_of_genres=10, genres_list=[]):
     books_df = read_goodreads_10k()
 
     books_df['book_description_processed'] = books_df.apply(lambda book: text_conditioning(book['book_description']),
@@ -131,11 +130,13 @@ def get_fully_processed(classification_on="primary", num_of_genres=10, genres_li
     return books_df, genres_to_predict
 
 
-def get_processed_split(classification_on="primary", num_of_genres=10, genres_list=None,
+def get_processed_split(classification_on="primary", num_of_genres=10, genres_list=[],
                         test_size=0.25, vectorized='tf-idf', max_features=1000, ngram_range=(1, 2)):
+
     books_df, genres_to_predict = get_fully_processed(classification_on=classification_on,
                                                       num_of_genres=num_of_genres,
                                                       genres_list=genres_list)
+
     train, test = train_test_split(books_df, test_size=test_size)
 
     if vectorized:

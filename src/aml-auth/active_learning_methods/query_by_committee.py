@@ -1,24 +1,24 @@
 import numpy as np
 import time
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.feature_extraction.text import TfidfVectorizer
-
 from modAL.models import ActiveLearner, Committee
 from modAL.disagreement import max_disagreement_sampling
 
-from data_processing import get_fully_processed, get_selected_genres
-from ranked_batch_mode_sampling import delete_rows_csr
+#from helper_functions import delete_rows_csr
+import scipy.sparse as sp
+from numpy import ones
 
-
-def prepare_data():
-    books_df, genres_to_predict = get_fully_processed(genres_list=get_selected_genres())
-
-    vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=1000)
-    X = vectorizer.fit_transform(books_df['book_description_processed'])
-    y = books_df['major_genre'].values
-
-    return X, y
+# will be replaces by from helper_functions import delete_rows_csr
+def delete_rows_csr(mat, indices):
+    """
+    Remove the rows denoted by ``indices`` form the CSR sparse matrix ``mat``.
+    """
+    if not isinstance(mat, sp.csr_matrix):
+        raise ValueError("works only for CSR format -- use .tocsr() first")
+    indices = list(indices)
+    mask = ones(mat.shape[0], dtype=bool)
+    mask[indices] = False
+    return mat[mask]
 
 
 def create_random_pool_and_initial_sets(X, y, n_samples_for_intial):
@@ -33,24 +33,17 @@ def create_random_pool_and_initial_sets(X, y, n_samples_for_intial):
     return X_train, y_train, X_pool, y_pool
 
 
-def run():
-    X, y = prepare_data()
-
+def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
     # start timer
     start_time = time.time()
-
-    # model to use
-    model = LogisticRegression(solver='lbfgs', random_state=0, max_iter=300)
-
-    n_comittee_members = 3
 
     # init list of different learners 
     learners = []
 
     for member_idx in range(n_comittee_members):
-        X_train, y_train, X_pool, y_pool = create_random_pool_and_initial_sets(X, y, 1000)
+        X_train, y_train, X_pool, y_pool = create_random_pool_and_initial_sets(X, y, n_samples_for_intial)
 
-        learners.append(ActiveLearner(estimator=model,
+        learners.append(ActiveLearner(estimator=estimator,
                         X_training=X_train, y_training=y_train))
         
     # init committee
@@ -60,7 +53,7 @@ def run():
     # print('Score over unqueried samples'.format(unqueried_score))
 
     performance_history = []
-    n_queries = 1000
+    #n_queries = 1000
 
     for query in range(n_queries):
 
