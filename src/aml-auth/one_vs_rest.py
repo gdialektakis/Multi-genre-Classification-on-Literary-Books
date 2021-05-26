@@ -20,9 +20,9 @@ def run(model):
     # make predictions
     y_pred = model.predict(X_test)
 
-    print('\n--------OneVsRest with {:}'.format(model))
+    print('\n--------OneVsRest with {:}'.format(model.estimator))
     evaluate_model(y_test, y_pred, print_results=True)
-    
+
     return y_test, y_pred
 
 
