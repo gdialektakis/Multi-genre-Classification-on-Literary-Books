@@ -13,7 +13,7 @@ def run():
     eec.fit(X_train, y_train)
     y_pred = eec.predict(X_test)
 
-    evaluate_model(actual=y_test, predicted=y_pred)
+    evaluate_model(actual=y_test, predicted=y_pred, print_results=True, average='weighted')
 
 
 if __name__ == "__main__":
