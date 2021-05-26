@@ -4,7 +4,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier
-from data_processing import get_processed_split, label_encode_genres, get_fully_processed
+from data_processing import get_processed_split, label_encode_genres, get_selected_genres
 from evaluation import evaluate_model
 from imblearn.over_sampling import SMOTE, ADASYN
 
@@ -40,8 +40,7 @@ def run_classifiers(X_train, X_test, y_train, y_test):
 
 
 def get_baseline_split(representation=None):
-    genres_list = ['Romance', 'Adventure', 'Young Adult', 'Space', 'Historical', 'Adult',
-                   'Speculative Fiction', 'War', 'Apocalyptic']
+    genres_list = get_selected_genres()
 
     if representation == "bow":
         X_train, X_test, y_train, y_test = get_processed_split(genres_list=genres_list, vectorized="bow")
@@ -53,8 +52,8 @@ def get_baseline_split(representation=None):
     y_train = label_encode_genres(y_train, genres_list)
     y_test = label_encode_genres(y_test, genres_list)
 
-    y_train = y_train['genre_label'].to_frame()
-    y_test = y_test['genre_label'].to_frame()
+    y_train = y_train['major_genre'].to_frame()
+    y_test = y_test['major_genre'].to_frame()
 
     return X_train, X_test, y_train, y_test
 
