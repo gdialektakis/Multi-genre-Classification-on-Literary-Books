@@ -32,19 +32,18 @@ def evaluate_model(actual, predicted, average="micro", print_results=False):
     f1_score = metrics.f1_score(actual, predicted, average=average)
     accuracy_score = metrics.accuracy_score(actual, predicted)
     hamming_loss = metrics.hamming_loss(actual, predicted)
-    # hamming_score = get_hamming_score(actual, predicted)
+    classfication_report = metrics.classification_report(actual, predicted)
 
     if print_results:
-        print(f"Accuracy score: {accuracy_score:.2f}")
-
-        print(f"Precision score: {precision_score:.2f} with average parameter: {average}")
-        print(f"Recall score: {recall_score:.2f} with average parameter: {average}")
+        print(f"Accuracy score: {accuracy_score:.4f}")
+        print(f"Precision score: {precision_score:.4f} with average parameter: {average}")
+        print(f"Recall score: {recall_score:.4f} with average parameter: {average}")
         print(f"F1 score: {f1_score:.2f} with average parameter: {average}")
+        print(f"Hamming loss: {hamming_loss:.4f}")
+        print(f"Classification report:\n{classfication_report}")
 
-        print(f"Hamming loss: {hamming_loss:.2f}")
-        # print(f"Hamming score: {hamming_score:.2f}")
 
-    return accuracy_score, precision_score, recall_score, f1_score, hamming_loss
+    return accuracy_score, precision_score, recall_score, f1_score, hamming_loss, classfication_report
 
 
 def run():
