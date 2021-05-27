@@ -6,9 +6,9 @@ from evaluation import evaluate_model
 from class_imbalance_methods.helper_functions import get_baseline_split
 from class_imbalance_methods import smote, adasyn, easy_ensemble
 
-#, "bayes", "rand_forest", "xgb"
+
 def run_classifiers(X_train, X_test, y_train, y_test):
-    for classifier_name in ["logreg"]:
+    for classifier_name in ["logreg", "bayes", "rand_forest", "xgb"]:
         if classifier_name == "logreg":
             classifier = LogisticRegression(max_iter=10000, n_jobs=-1)
         elif classifier_name == "bayes":
