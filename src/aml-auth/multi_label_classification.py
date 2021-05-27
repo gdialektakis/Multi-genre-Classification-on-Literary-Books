@@ -28,5 +28,5 @@ if __name__ == "__main__":
         y_test, y_pred = one_vs_rest.run(estimator, train_test_set)
         evaluate_model(y_test, y_pred, print_results=True)
 
-        y_test, y_pred = rakel.run(estimator, train_test_set)
-        evaluate_model(y_test, y_pred, print_results=True)
+        #y_test, y_pred = rakel.run(estimator, train_test_set)
+        #evaluate_model(y_test, y_pred, print_results=True)

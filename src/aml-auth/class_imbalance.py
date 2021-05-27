@@ -1,17 +1,14 @@
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_val_score
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier
-from data_processing import get_processed_split, label_encode_genres, get_selected_genres
 from evaluation import evaluate_model
-from imblearn.over_sampling import SMOTE, ADASYN
+from class_imbalance_methods.helper_functions import get_baseline_split
+from class_imbalance_methods import smote, adasyn, easy_ensemble
 
-
+#, "bayes", "rand_forest", "xgb"
 def run_classifiers(X_train, X_test, y_train, y_test):
-
-    for classifier_name in ["logreg", "bayes", "rand_forest", "xgb"]:
+    for classifier_name in ["logreg"]:
         if classifier_name == "logreg":
             classifier = LogisticRegression(max_iter=10000, n_jobs=-1)
         elif classifier_name == "bayes":
@@ -34,28 +31,9 @@ def run_classifiers(X_train, X_test, y_train, y_test):
         y_pred = classifier.predict(X_test)
 
         print("==============================")
-        print(f"Results for {classifier_name}")
+        print('Results for {:}'.format(classifier))
         evaluate_model(y_test, y_pred, print_results=True)
         print("==============================")
-
-
-def get_baseline_split(representation=None):
-    genres_list = get_selected_genres()
-
-    if representation == "bow":
-        X_train, X_test, y_train, y_test = get_processed_split(genres_list=genres_list, vectorized="bow")
-    elif representation == "tf-idf":
-        X_train, X_test, y_train, y_test = get_processed_split(genres_list=genres_list, vectorized="tf-idf")
-    else:
-        raise ValueError("Invalid representation")
-
-    y_train = label_encode_genres(y_train, genres_list)
-    y_test = label_encode_genres(y_test, genres_list)
-
-    y_train = y_train['major_genre'].to_frame()
-    y_test = y_test['major_genre'].to_frame()
-
-    return X_train, X_test, y_train, y_test
 
 
 def main():
@@ -69,22 +47,16 @@ def main():
         run_classifiers(X_train, X_test, y_train, y_test)
 
         # SMOTE Experiments
-        smote_sampler = SMOTE(sampling_strategy='not majority', n_jobs=-1)
-        X_smote, y_smote = smote_sampler.fit_resample(X_train, y_train)
-        print("######################")
-        print("SMOTE")
-        print("######################")
-        print("\n")
+        X_smote, y_smote = smote.run(X_train, y_train)
         run_classifiers(X_smote, X_test, y_smote, y_test)
 
         # ADASYN Experiments
-        adasyn_sampler = ADASYN(sampling_strategy='not majority', n_jobs=-1)
-        X_adasyn, y_adasyn = adasyn_sampler.fit_resample(X_train, y_train)
-        print("######################")
-        print("ADASYN")
-        print("######################")
-        print("\n")
+        X_adasyn, y_adasyn = adasyn.run(X_train, y_train)
         run_classifiers(X_adasyn, X_test, y_adasyn, y_test)
+
+        # Easy Ensemble Experiments
+        y_test, y_pred = easy_ensemble.run(X_train, X_test, y_train, y_test)
+        evaluate_model(y_test, y_pred, print_results=True, average='weighted')
 
 
 if __name__ == "__main__":

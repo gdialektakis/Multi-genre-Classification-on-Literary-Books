@@ -5,6 +5,7 @@ from modAL.batch import uncertainty_batch_sampling
 from modAL.models import ActiveLearner
 from sklearn.linear_model import LogisticRegression
 from data_processing import get_fully_processed, get_selected_genres
+from active_learning_methods.helper_functions import delete_rows_csr
 
 
 
