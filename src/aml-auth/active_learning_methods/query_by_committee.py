@@ -39,7 +39,10 @@ def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
 
     performance_history = []
 
-    for query in range(n_queries):
+    model_accuracy = 0
+    index = 0
+    while model_accuracy < 0.55:
+        index += 1
 
         # get sample from pool
         query_idx, query_instance = committee.query(X_pool)
@@ -60,6 +63,7 @@ def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
     print("--- %s seconds ---" % (time.time() - start_time))
 
     print(performance_history)
+    return index
 
 
 if __name__ == "__main__":
