@@ -141,7 +141,7 @@ def get_processed_split(classification_on="primary", num_of_genres=10, genres_li
 
     if vectorized:
         if vectorized == "tf-idf":
-            vectorizer = TfidfVectorizer(max_features=max_features, ngram_range=ngram_range)
+            vectorizer = TfidfVectorizer(stop_words='english', ngram_range=ngram_range)
         elif vectorized == "bow":
             vectorizer = CountVectorizer(stop_words='english', ngram_range=ngram_range)
         else:
