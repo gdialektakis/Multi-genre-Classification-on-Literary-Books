@@ -7,7 +7,7 @@ from data_processing import get_fully_processed, get_selected_genres
 def prepare_data():
     books_df, genres_to_predict = get_fully_processed(genres_list=get_selected_genres())
 
-    vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=1000)
+    vectorizer = TfidfVectorizer(ngram_range=(1, 2))
     X = vectorizer.fit_transform(books_df['book_description_processed'])
     y = books_df['major_genre'].values
 
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     n_samples_for_initial = 100
     n_queries = 10
     n_comittee_members = 3
-    estimator = LogisticRegression(solver='lbfgs', random_state=0, max_iter=300)
+    estimator = LogisticRegression(n_jobs=-1, max_iter=1000)
 
     print("------------------------------- \n Estimator using the whole data as labeled\n ")
     full_data_estimator.run(X, y, estimator)
