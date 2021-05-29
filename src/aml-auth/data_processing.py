@@ -97,8 +97,8 @@ def get_genre_label(row, genre_list):
         if row[genre] == 1:
             return counter
 
-    print(row)
-    print(row.values)
+    # print(row)
+    # print(row.values)
 
 
 def label_encode_genres(books_df, genre_list):
@@ -112,33 +112,43 @@ def get_selected_genres():
                    'Speculative Fiction', 'War', 'Apocalyptic']
 
 
-def get_fully_processed(classification_on="primary", num_of_genres=10, genres_list=[]):
+def get_fully_processed(classification_on="primary", num_of_genres=10, genres_list=[], multilabel=True):
+    # load dataframe of books
     books_df = read_goodreads_10k()
 
+    # process book description
     books_df['book_description_processed'] = books_df.apply(lambda book: text_conditioning(book['book_description']),
                                                             axis=1)
 
+    # if no specific list of genres is provided keep the n most frequent ones
     if not genres_list:
         genres_to_predict = get_n_most_frequent_genres(books_df, classification_on, n=num_of_genres)
     else:
         genres_to_predict = genres_list
 
+    # filtering of genres to keep required both for multi-label and multi-class classification 
     books_df = filter_out_genres(books_df, classification_on, genres_to_predict)
     books_df = genres_to_onehot(books_df, classification_on, genres_to_predict)
-    books_df = label_encode_genres(books_df, genres_list)
+
+    if not multilabel:
+        # multi-class classification
+        books_df = label_encode_genres(books_df, genres_list)
 
     return books_df, genres_to_predict
 
 
 def get_processed_split(classification_on="primary", num_of_genres=10, genres_list=[],
-                        test_size=0.25, vectorized='tf-idf', max_features=1000, ngram_range=(1, 2)):
+                        multilabel=True, test_size=0.25, vectorized='tf-idf',
+                        ngram_range=(1, 2)):
 
     books_df, genres_to_predict = get_fully_processed(classification_on=classification_on,
                                                       num_of_genres=num_of_genres,
-                                                      genres_list=genres_list)
+                                                      genres_list=genres_list,
+                                                      multilabel=multilabel)
 
     train, test = train_test_split(books_df, test_size=test_size)
 
+    # vectorize book description text
     if vectorized:
         if vectorized == "tf-idf":
             vectorizer = TfidfVectorizer(stop_words='english', ngram_range=ngram_range)
@@ -153,8 +163,12 @@ def get_processed_split(classification_on="primary", num_of_genres=10, genres_li
         X_train = train['book_description_processed']
         X_test = test['book_description_processed']
 
-    y_train = train[genres_to_predict]
-    y_test = test[genres_to_predict]
+    if multilabel:
+        y_train = train[genres_to_predict]
+        y_test = test[genres_to_predict]
+    else:
+        y_train = train['major_genre']
+        y_test = test['major_genre']
 
     return X_train, X_test, y_train, y_test
 

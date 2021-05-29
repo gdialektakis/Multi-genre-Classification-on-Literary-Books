@@ -3,12 +3,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
 from xgboost import XGBClassifier
 from evaluation import evaluate_model
-from class_imbalance_methods.helper_functions import get_baseline_split
-from class_imbalance_methods import smote, adasyn, easy_ensemble
+from class_imbalance_methods.helper_functions import get_baseline_split, get_fully_processed_books_df
+from class_imbalance_methods import smote, adasyn, easy_ensemble, text_augmentation
 
 
 def run_classifiers(X_train, X_test, y_train, y_test):
-    for classifier_name in ["logreg", "bayes", "rand_forest", "xgb"]:
+    for classifier_name in ["logreg"]:#, "bayes", "rand_forest", "xgb"]:
         if classifier_name == "logreg":
             classifier = LogisticRegression(max_iter=10000, n_jobs=-1)
         elif classifier_name == "bayes":
@@ -37,13 +37,18 @@ def run_classifiers(X_train, X_test, y_train, y_test):
 
 
 def main():
-    for representation in ["bow", "tf-idf"]:
+    for representation in ["bow"]:#, "tf-idf"]:
         print("\n")
         print("++++++++")
         print(f"{representation}")
         print("++++++++")
 
+        # Run baseline
         X_train, X_test, y_train, y_test = get_baseline_split(representation=representation)
+        run_classifiers(X_train, X_test, y_train, y_test)
+
+        # Text augmentation Experiments
+        X_train, X_test, y_train, y_test = text_augmentation.run(books_df=get_fully_processed_books_df(), representation=representation)
         run_classifiers(X_train, X_test, y_train, y_test)
 
         # SMOTE Experiments

@@ -5,9 +5,9 @@ from data_processing import get_fully_processed, get_selected_genres
 
 
 def prepare_data():
-    books_df, genres_to_predict = get_fully_processed(genres_list=get_selected_genres())
+    books_df, genres_to_predict = get_fully_processed(genres_list=get_selected_genres(), multilabel=False)
 
-    vectorizer = TfidfVectorizer(ngram_range=(1, 2))
+    vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2))
     X = vectorizer.fit_transform(books_df['book_description_processed'])
     y = books_df['major_genre'].values
 
