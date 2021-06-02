@@ -44,7 +44,7 @@ def run(X, y, n_samples_for_intial, n_queries, estimator):
 
         # Teach our ActiveLearner model the record it has requested.
         X_selected, y_selected = X_candidate[candidate_index, :], y_candidate[candidate_index]
-        learner.teach(X=X_selected, y=X_selected)
+        learner.teach(X=X_selected, y=y_selected)
 
         # Remove the queried instance from the unlabeled pool.
         X_pool = delete_rows_csr(X_pool, candidate_index)  # TODO Re-check this, the index may be wrong
