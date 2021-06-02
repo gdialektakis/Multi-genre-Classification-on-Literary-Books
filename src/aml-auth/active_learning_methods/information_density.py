@@ -51,7 +51,7 @@ def run(X, y, n_samples_for_intial, n_queries, estimator):
         y_pool = np.delete(y_pool, candidate_index)
 
         # Calculate and report our model's accuracy.
-        model_accuracy = learner.score(X, y)  # TODO check on what pool we score
+        model_accuracy = learner.score(X_train, y_train)  # TODO check on what pool we score
         print('Accuracy after query {n}: {acc:0.4f}'.format(n=index + 1, acc=model_accuracy))
 
         # Save our model's performance for plotting.
