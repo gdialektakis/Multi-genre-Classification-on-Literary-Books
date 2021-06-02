@@ -2,20 +2,7 @@ import numpy as np
 import time
 from modAL.models import ActiveLearner, Committee
 from modAL.disagreement import max_disagreement_sampling
-
-from active_learning_methods.helper_functions import delete_rows_csr
-
-
-def create_random_pool_and_initial_sets(X, y, n_samples_for_intial):
-    training_indices = np.random.choice(range(X.shape[0]), size=n_samples_for_intial, replace=False)
-
-    X_train = X[training_indices]
-    y_train = y[training_indices]
-
-    X_pool = delete_rows_csr(X, training_indices)
-    y_pool = np.delete(y, training_indices)
-
-    return X_train, y_train, X_pool, y_pool
+from active_learning_methods.helper_functions import create_random_pool_and_initial_sets, delete_rows_csr
 
 
 def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
@@ -54,7 +41,7 @@ def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
         )
 
         # save accuracy score
-        performance_history.append(committee.score(X, y))
+        performance_history.append(committee.score(X, y))  # Should this actually score on the initial dataset?
 
         # remove queried instance from pool
         X_pool = delete_rows_csr(X_pool, query_idx)
