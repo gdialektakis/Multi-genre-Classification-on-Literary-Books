@@ -2,12 +2,11 @@ import time
 from functools import partial
 
 import numpy as np
+from active_learning_methods.helper_functions import create_random_pool_and_initial_sets, delete_rows_csr
 from modAL import ActiveLearner
 from modAL.batch import uncertainty_batch_sampling
 from modAL.density import information_density
-# from helper_functions import create_random_pool_and_initial_sets, delete_rows_csr
 
-from active_learning_methods.helper_functions import create_random_pool_and_initial_sets, delete_rows_csr
 
 BATCH_SIZE = 3
 
@@ -47,8 +46,15 @@ def run(X, y, n_samples_for_intial, n_queries, estimator):
         learner.teach(X=X_selected, y=y_selected)
 
         # Remove the queried instance from the unlabeled pool.
-        X_pool = delete_rows_csr(X_pool, candidate_index)  # TODO Re-check this, the index may be wrong
-        y_pool = np.delete(y_pool, candidate_index)
+        pool_idx_list = []
+        for idx in candidate_index:
+            row = query_index[idx]
+            pool_idx_list.append(row)
+
+        pool_idx = np.asarray(pool_idx_list)
+
+        X_pool = delete_rows_csr(X_pool, pool_idx)
+        y_pool = np.delete(y_pool, pool_idx)
 
         # Calculate and report our model's accuracy.
         model_accuracy = learner.score(X_train, y_train)  # TODO check on what pool we score
