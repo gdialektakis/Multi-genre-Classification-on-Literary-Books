@@ -1,6 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from active_learning_methods import query_by_committee, ranked_batch_mode_sampling, random_active_learning, full_data_estimator
+from active_learning_methods import query_by_committee, ranked_batch_mode_sampling, random_active_learning, full_data_estimator, information_density
 from data_processing import get_fully_processed, get_selected_genres
 
 
@@ -36,4 +36,8 @@ if __name__ == "__main__":
 
     print("------------------------------- \n Random active learning \n ")
     num_of_annotated_samples = random_active_learning.run(X, y, n_samples_for_initial, n_queries, estimator)
+    print("Number of annotations needed: {}".format(num_of_annotated_samples))
+
+    print("------------------------------- \n Information density active learning \n ")
+    num_of_annotated_samples = information_density.run(X, y, n_samples_for_initial, n_queries, estimator)
     print("Number of annotations needed: {}".format(num_of_annotated_samples))
