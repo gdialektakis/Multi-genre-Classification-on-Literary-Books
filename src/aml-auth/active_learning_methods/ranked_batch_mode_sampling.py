@@ -4,6 +4,7 @@ from functools import partial
 from modAL.batch import uncertainty_batch_sampling
 from modAL.models import ActiveLearner
 from active_learning_methods.helper_functions import delete_rows_csr
+from sklearn import metrics
 
 """ For more information on Ranked batch-mode sampling you can read the following paper: 
 Thiago N.C. Cardoso, Rodrigo M. Silva, Sérgio Canuto, Mirella M. Moro, Marcos A. Gonçalves. 
@@ -13,6 +14,7 @@ https://www.sciencedirect.com/science/article/abs/pii/S0020025516313949
 
 
 def run(X_initial, y_initial, n_samples_for_initial, n_queries, batch_size, estimator):
+    np.random.seed(0)
     start_time = time.time()
 
     # Isolate our examples for our labeled dataset.
@@ -43,13 +45,13 @@ def run(X_initial, y_initial, n_samples_for_initial, n_queries, batch_size, esti
 
     model_accuracy = initial_accuracy
     index = 0
-    while model_accuracy < 0.55:
+    while model_accuracy < 0.65:
         index += 1
         query_index, query_instance = learner.query(X_pool)
 
         # Teach our ActiveLearner model the record it has requested.
-        X, y = X_pool[query_index, :], y_pool[query_index]
-        learner.teach(X=X, y=y)
+        X_requested, y_requested = X_pool[query_index, :], y_pool[query_index]
+        learner.teach(X=X_requested, y=y_requested)
 
         # Remove the queried instance from the unlabeled pool.
         X_pool = delete_rows_csr(X_pool, query_index)
@@ -57,13 +59,18 @@ def run(X_initial, y_initial, n_samples_for_initial, n_queries, batch_size, esti
 
         # Calculate and report our model's accuracy.
         model_accuracy = learner.score(X_initial, y_initial)
-        print('Accuracy after query {n}: {acc:0.4f}'.format(n=index + 1, acc=model_accuracy))
+        y_pred = learner.predict(X_initial)
+        f1_score = metrics.f1_score(y_initial, y_pred, average='micro')
+
+        if index % 20 == 0:
+            print('Accuracy after {n} training samples: {acc:0.4f}'.format(n=index*batch_size, acc=model_accuracy))
+            #print('F1 score after {n} training samples: {f1:0.4f}'.format(n=index * batch_size, f1=f1_score))
 
         # Save our model's performance for plotting.
         performance_history.append(model_accuracy)
 
     num_of_annotated_samples = index * batch_size
-    print("--- %s seconds ---" % (time.time() - start_time))
+    print("\n--- %s seconds ---" % (time.time() - start_time))
     return num_of_annotated_samples
 
 

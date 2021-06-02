@@ -2,7 +2,22 @@ import numpy as np
 import time
 from modAL.models import ActiveLearner, Committee
 from modAL.disagreement import max_disagreement_sampling
-from active_learning_methods.helper_functions import create_random_pool_and_initial_sets, delete_rows_csr
+
+from active_learning_methods.helper_functions import delete_rows_csr
+from sklearn import metrics
+
+
+def create_random_pool_and_initial_sets(X, y, n_samples_for_intial):
+    np.random.seed(0)
+    training_indices = np.random.choice(range(X.shape[0]), size=n_samples_for_intial, replace=False)
+
+    X_train = X[training_indices]
+    y_train = y[training_indices]
+
+    X_pool = delete_rows_csr(X, training_indices)
+    y_pool = np.delete(y, training_indices)
+
+    return X_train, y_train, X_pool, y_pool
 
 
 def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
@@ -12,23 +27,22 @@ def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
     # init list of different learners 
     learners = []
 
-    for member_idx in range(n_comittee_members):
-        X_train, y_train, X_pool, y_pool = create_random_pool_and_initial_sets(X, y, n_samples_for_intial)
+    X_train, y_train, X_pool, y_pool = create_random_pool_and_initial_sets(X, y, n_samples_for_intial)
 
-        learners.append(ActiveLearner(estimator=estimator,
-                        X_training=X_train, y_training=y_train))
+    for member_idx in range(n_comittee_members):
+        learners.append(ActiveLearner(estimator=estimator, X_training=X_train, y_training=y_train))
         
     # init committee
     committee = Committee(learner_list=learners, query_strategy=max_disagreement_sampling)
 
-    # unqueried_score = committee.score(X_pool, y_pool)
-    # print('Score over unqueried samples'.format(unqueried_score))
+    unqueried_score = committee.score(X, y)
+    print('Score over unqueried samples {:0.4f}'.format(unqueried_score))
 
     performance_history = []
 
     model_accuracy = 0
     index = 0
-    while model_accuracy < 0.55:
+    while model_accuracy < 0.65:
         index += 1
 
         # get sample from pool
@@ -41,12 +55,19 @@ def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
         )
 
         # save accuracy score
-        performance_history.append(committee.score(X, y))  # Should this actually score on the initial dataset?
+        model_accuracy = committee.score(X, y)
+        performance_history.append(model_accuracy)
 
         # remove queried instance from pool
         X_pool = delete_rows_csr(X_pool, query_idx)
         y_pool = np.delete(y_pool, query_idx)
-    
+
+        y_pred = committee.predict(X)
+        f1_score = metrics.f1_score(y, y_pred, average='micro')
+
+        if index % 100 == 0:
+            print('Accuracy after {n} training sampls: {acc:0.4f}'.format(n=index, acc=committee.score(X, y)))
+            #print('F1 score after {n} training samples: {f1:0.4f}'.format(n=index, f1=f1_score))
     print("--- %s seconds ---" % (time.time() - start_time))
 
     print(performance_history)

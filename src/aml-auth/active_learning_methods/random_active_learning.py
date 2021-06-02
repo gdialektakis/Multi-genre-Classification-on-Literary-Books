@@ -4,6 +4,7 @@ from modAL.models import ActiveLearner
 from modAL.batch import uncertainty_batch_sampling
 import numpy as np
 from active_learning_methods.helper_functions import delete_rows_csr
+from sklearn import metrics
 
 """ For more information on Ranked batch-mode sampling you can read the following paper: 
 Thiago N.C. Cardoso, Rodrigo M. Silva, Sérgio Canuto, Mirella M. Moro, Marcos A. Gonçalves. 
@@ -13,6 +14,7 @@ https://www.sciencedirect.com/science/article/abs/pii/S0020025516313949
 
 
 def run(X_initial, y_initial, n_samples_for_initial, n_queries, estimator):
+    np.random.seed(0)
     start_time = time.time()
     # Isolate our examples for our labeled dataset.
     n_labeled_examples = X_initial.shape[0]
@@ -42,7 +44,7 @@ def run(X_initial, y_initial, n_samples_for_initial, n_queries, estimator):
 
     model_accuracy = initial_accuracy
     index = 0
-    while model_accuracy < 0.55:
+    while model_accuracy < 0.65:
         index += 1
         query_index = np.random.choice(y_pool.shape[0], size=1, replace=False)
 
@@ -56,7 +58,12 @@ def run(X_initial, y_initial, n_samples_for_initial, n_queries, estimator):
 
         # Calculate and report our model's accuracy.
         model_accuracy = learner.score(X_initial, y_initial)
-        print('Accuracy after query {n}: {acc:0.4f}'.format(n=index + 1, acc=model_accuracy))
+        y_pred = learner.predict(X_initial)
+        f1_score = metrics.f1_score(y_initial, y_pred, average='micro')
+
+        if index % 100 == 0:
+            print('Accuracy after {n} training samples: {acc:0.4f}'.format(n=index, acc=model_accuracy))
+            #print('F1 score after {n} training samples: {f1:0.4f}'.format(n=index, f1=f1_score))
 
         # Save our model's performance for plotting.
         performance_history.append(model_accuracy)
