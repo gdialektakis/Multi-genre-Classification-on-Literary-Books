@@ -102,6 +102,9 @@ def get_class_distribution(books_df):
 
 
 def run(books_df, representation):
+    import nltk
+    nltk.download('wordnet')
+
     # augment dataset
     books_df = augment_dataset(books_df)
 
