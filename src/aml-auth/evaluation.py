@@ -57,7 +57,7 @@ def imbalanced_evaluate(actual, predicted, proba, average="micro", print_results
     return f1_score, auc
 
 
-def evaluate_per_label(actual, predicted, average="micro", print_results=False):
+def evaluate_per_label(actual, predicted, print_results=False):
     accuracy_per_label = []
     precision_per_label = []
     recall_per_label = []
@@ -65,14 +65,12 @@ def evaluate_per_label(actual, predicted, average="micro", print_results=False):
 
     for label in range(actual.shape[1]):
         actual_label = actual.values[:, label]
-        predicted_label = predicted.toarray()[:, label]
+        predicted_label = predicted[:, label]
 
         recall_score = metrics.recall_score(actual_label, predicted_label)
         precision_score = metrics.precision_score(actual_label, predicted_label)
         f1_score = metrics.f1_score(actual_label, predicted_label)
         accuracy_score = metrics.accuracy_score(actual_label, predicted_label)
-        hamming_loss = metrics.hamming_loss(actual_label, predicted_label)
-        #classfication_report = metrics.classification_report(actual_label, predicted_label)
 
         accuracy_per_label.append(accuracy_score)
         precision_per_label.append(precision_score)
