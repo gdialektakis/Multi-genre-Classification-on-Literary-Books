@@ -42,8 +42,19 @@ def evaluate_model(actual, predicted, average="micro", print_results=False):
         print(f"Hamming loss: {hamming_loss:.4f}")
         print(f"Classification report:\n{classfication_report}")
 
-
     return accuracy_score, precision_score, recall_score, f1_score, hamming_loss, classfication_report
+
+
+def imbalanced_evaluate(actual, predicted, proba, average="micro", print_results=False):
+    f1_score = metrics.f1_score(actual, predicted, average=average)
+    auc = metrics.roc_auc_score(actual, proba, multi_class='ovr', average="weighted")
+    # brier_score_loss = metrics.brier_score_loss(actual, predicted)
+
+    if print_results:
+        print(f"F1 score: {f1_score:.2f} with average parameter: {average}")
+        # print(f"Brier score loss: {brier_score_loss:.2f} with average parameter: {brier_score_loss}")
+
+    return f1_score, auc
 
 
 def evaluate_per_label(actual, predicted, average="micro", print_results=False):
