@@ -14,7 +14,7 @@ from data_processing import get_processed_split, get_selected_genres
 def estimators_to_try():
     estimators = []
 
-    estimators.append(LogisticRegression(n_jobs=-1))
+    estimators.append(LogisticRegression(max_iter=1000, n_jobs=-1))
     estimators.append(MultinomialNB(alpha=0.1))
     estimators.append(RandomForestClassifier(criterion='entropy', n_estimators=200, n_jobs=-1))
 

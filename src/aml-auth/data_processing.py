@@ -151,9 +151,9 @@ def get_processed_split(classification_on="primary", num_of_genres=10, genres_li
     # vectorize book description text
     if vectorized:
         if vectorized == "tf-idf":
-            vectorizer = TfidfVectorizer(stop_words='english', ngram_range=ngram_range)
+            vectorizer = TfidfVectorizer(stop_words='english', ngram_range=ngram_range, max_features=10000)
         elif vectorized == "bow":
-            vectorizer = CountVectorizer(stop_words='english', ngram_range=ngram_range)
+            vectorizer = CountVectorizer(stop_words='english', ngram_range=ngram_range, max_features=10000)
         else:
             raise ValueError("Invalid vectorized argument, please choose on of [tf-idf, bow, None]")
 
