@@ -54,7 +54,7 @@ def evaluate_per_label(actual, predicted, average="micro", print_results=False):
 
     for label in range(actual.shape[1]):
         actual_label = actual.values[:, label]
-        predicted_label = predicted[:, label]
+        predicted_label = predicted.toarray()[:, label]
 
         recall_score = metrics.recall_score(actual_label, predicted_label)
         precision_score = metrics.precision_score(actual_label, predicted_label)
