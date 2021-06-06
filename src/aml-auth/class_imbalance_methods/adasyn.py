@@ -3,7 +3,7 @@ from imblearn.over_sampling import ADASYN
 
 def run(X_train, y_train):
 
-    adasyn_sampler = ADASYN(sampling_strategy='not majority', n_jobs=-1)
+    adasyn_sampler = ADASYN(sampling_strategy='not majority')
     X_adasyn, y_adasyn = adasyn_sampler.fit_resample(X_train, y_train)
     print("######################")
     print("ADASYN")

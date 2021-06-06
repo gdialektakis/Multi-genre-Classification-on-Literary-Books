@@ -105,6 +105,11 @@ def run(books_df, representation):
     import nltk
     nltk.download('wordnet')
 
+    print("######################")
+    print("Text Augmentation")
+    print("######################")
+    print("\n")
+
     # augment dataset
     books_df = augment_dataset(books_df)
 
