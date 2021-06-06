@@ -1,4 +1,3 @@
-from sklearn.linear_model import LogisticRegression
 from sklearn.multioutput import ClassifierChain
 
 

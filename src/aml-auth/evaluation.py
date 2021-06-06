@@ -38,12 +38,44 @@ def evaluate_model(actual, predicted, average="micro", print_results=False):
         print(f"Accuracy score: {accuracy_score:.4f}")
         print(f"Precision score: {precision_score:.4f} with average parameter: {average}")
         print(f"Recall score: {recall_score:.4f} with average parameter: {average}")
-        print(f"F1 score: {f1_score:.2f} with average parameter: {average}")
+        print(f"F1 score: {f1_score:.4f} with average parameter: {average}")
         print(f"Hamming loss: {hamming_loss:.4f}")
         print(f"Classification report:\n{classfication_report}")
 
 
     return accuracy_score, precision_score, recall_score, f1_score, hamming_loss, classfication_report
+
+
+def evaluate_per_label(actual, predicted, average="micro", print_results=False):
+    accuracy_per_label = []
+    precision_per_label = []
+    recall_per_label = []
+    f1_per_label = []
+
+    for label in range(actual.shape[1]):
+        actual_label = actual.values[:, label]
+        predicted_label = predicted[:, label]
+
+        recall_score = metrics.recall_score(actual_label, predicted_label)
+        precision_score = metrics.precision_score(actual_label, predicted_label)
+        f1_score = metrics.f1_score(actual_label, predicted_label)
+        accuracy_score = metrics.accuracy_score(actual_label, predicted_label)
+        hamming_loss = metrics.hamming_loss(actual_label, predicted_label)
+        #classfication_report = metrics.classification_report(actual_label, predicted_label)
+
+        accuracy_per_label.append(accuracy_score)
+        precision_per_label.append(precision_score)
+        recall_per_label.append(recall_score)
+        f1_per_label.append(f1_score)
+
+
+        if print_results:
+            print(f"Accuracy score: {accuracy_score:.4f}")
+            print(f"Precision score: {precision_score:.4f}")
+            print(f"Recall score: {recall_score:.4f}")
+            print(f"F1 score: {f1_score:.4f}")
+
+    return accuracy_per_label, precision_per_label, recall_per_label, f1_per_label
 
 
 def run():
