@@ -6,7 +6,7 @@ from active_learning_methods.helper_functions import create_random_pool_and_init
 from modAL import ActiveLearner
 from modAL.batch import uncertainty_batch_sampling
 from modAL.density import information_density
-
+from sklearn import metrics
 
 BATCH_SIZE = 5
 
@@ -29,9 +29,9 @@ def run(X, y, n_samples_for_intial, n_queries, estimator):
     print("Initial Accuracy: ", initial_accuracy)
     performance_history = [initial_accuracy]
 
-    model_accuracy = initial_accuracy
+    f1_score = 0
     index = 0
-    while model_accuracy < 0.6:
+    while  f1_score < 0.65:
         index += 1
         query_index, _ = learner.query(X_pool)
 
@@ -56,13 +56,14 @@ def run(X, y, n_samples_for_intial, n_queries, estimator):
         X_pool = delete_rows_csr(X_pool, pool_idx)
         y_pool = np.delete(y_pool, pool_idx)
 
-        # Calculate and report our model's accuracy.
-        model_accuracy = learner.score(X, y)  # TODO check on what pool we score
+        # Calculate and report our model's f1_score.
+        y_pred = learner.predict(X)
+        f1_score = metrics.f1_score(y, y_pred, average='micro')
         if index % 20 == 0:
-            print('Accuracy after {n} training samples: {acc:0.4f}'.format(n=index*BATCH_SIZE, acc=model_accuracy))
+            print('F1 score after {n} training samples: {f1:0.4f}'.format(n=index * batch_size, f1=f1_score))
 
         # Save our model's performance for plotting.
-        performance_history.append(model_accuracy)
+        performance_history.append(f1_score)
 
 
 

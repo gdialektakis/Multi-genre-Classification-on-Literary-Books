@@ -2,7 +2,6 @@ import numpy as np
 import time
 from modAL.models import ActiveLearner, Committee
 from modAL.disagreement import max_disagreement_sampling
-
 from active_learning_methods.helper_functions import delete_rows_csr
 from sklearn import metrics
 
@@ -40,9 +39,9 @@ def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
 
     performance_history = []
 
-    model_accuracy = 0
+    f1_score = 0
     index = 0
-    while model_accuracy < 0.65:
+    while f1_score < 0.65:
         index += 1
 
         # get sample from pool
@@ -54,10 +53,6 @@ def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
             y=y_pool[query_idx].reshape(1, )
         )
 
-        # save accuracy score
-        model_accuracy = committee.score(X, y)
-        performance_history.append(model_accuracy)
-
         # remove queried instance from pool
         X_pool = delete_rows_csr(X_pool, query_idx)
         y_pool = np.delete(y_pool, query_idx)
@@ -66,8 +61,10 @@ def run(X, y, n_samples_for_intial, n_queries, n_comittee_members, estimator):
         f1_score = metrics.f1_score(y, y_pred, average='micro')
 
         if index % 100 == 0:
-            print('Accuracy after {n} training sampls: {acc:0.4f}'.format(n=index, acc=committee.score(X, y)))
-            #print('F1 score after {n} training samples: {f1:0.4f}'.format(n=index, f1=f1_score))
+            print('F1 score after {n} training samples: {f1:0.4f}'.format(n=index, f1=f1_score))
+
+        # save accuracy score
+        performance_history.append(f1_score)
     print("--- %s seconds ---" % (time.time() - start_time))
 
     print(performance_history)

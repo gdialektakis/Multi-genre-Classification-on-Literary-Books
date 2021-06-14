@@ -43,9 +43,9 @@ def run(X_initial, y_initial, n_samples_for_initial, n_queries, batch_size, esti
     print("Initial Accuracy: ", initial_accuracy)
     performance_history = [initial_accuracy]
 
-    model_accuracy = initial_accuracy
+    f1_score = 0
     index = 0
-    while model_accuracy < 0.65:
+    while f1_score < 0.65:
         index += 1
         query_index, query_instance = learner.query(X_pool)
 
@@ -57,17 +57,15 @@ def run(X_initial, y_initial, n_samples_for_initial, n_queries, batch_size, esti
         X_pool = delete_rows_csr(X_pool, query_index)
         y_pool = np.delete(y_pool, query_index)
 
-        # Calculate and report our model's accuracy.
-        model_accuracy = learner.score(X_initial, y_initial)
+        # Calculate and report our model's f1_score.
         y_pred = learner.predict(X_initial)
         f1_score = metrics.f1_score(y_initial, y_pred, average='micro')
 
         if index % 20 == 0:
-            print('Accuracy after {n} training samples: {acc:0.4f}'.format(n=index*batch_size, acc=model_accuracy))
-            #print('F1 score after {n} training samples: {f1:0.4f}'.format(n=index * batch_size, f1=f1_score))
+            print('F1 score after {n} training samples: {f1:0.4f}'.format(n=index * batch_size, f1=f1_score))
 
         # Save our model's performance for plotting.
-        performance_history.append(model_accuracy)
+        performance_history.append(f1_score)
 
     num_of_annotated_samples = index * batch_size
     print("\n--- %s seconds ---" % (time.time() - start_time))
